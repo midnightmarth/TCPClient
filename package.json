@@ -1,0 +1,17 @@
+{
+  "name": "helpchallenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "",
+    "start": "node server.js"
+  },
+  "author": "Stephen Myers",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^2.19.0",
+    "jsonlines": "^0.1.1",
+    "optimist": "^0.6.1"
+  }
+}
