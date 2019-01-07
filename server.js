@@ -1,14 +1,20 @@
 #!/usr/bin/env node
+const program = require('commander');
 const net = require("net");
 const readline = require ("readline")
-const { IpAddress, port } = require("./config");
 
-const rl = readline.createInterface({
+const { IpAddress, port } = require("./config");
+const option = { host: IpAddress.IpAddress, port: port.port };
+let rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-const option = { host: IpAddress.IpAddress, port: port.port };
+program
+  .version('0.0.1')
+  .description('A TCP client that communicates with a server')
+  
+program.parse(process.argv);
 
 let getConn = connName => {
   let client = net.createConnection(option, () => {
@@ -29,26 +35,61 @@ let getConn = connName => {
 
   client.setEncoding("utf8");
 
+  // let something = () => {
+  //   if(connected) {
+  //     rl.question('\nenter commands as you get data\n', (input) => {
+  //       input = input.toLowerCase()
+  //       switch( input !== '' ){
+  //         case input === 'time':
+  //           client.write( JSON.stringify({'request': 'time'}) )
+  //           console.log('Asking for Server Time')
+  //           something()
+  //           break;
+  //         case input === 'count':
+  //           client.write(JSON.stringify({'request': 'count'}) )
+  //           console.log('Asking for Count')
+  //           something()
+  //           break;
+  //         default:
+  //           something()
+  //           return
+  //       }
+  //     })
+  //   }
+  // }
+
   client.on("connect", () => {
+
     console.log("Got Connection!");
+    connected = true;
+    // something()
   });
 
+  let hb = null;
   client.on("data", (data) => {
-    console.log("............\nGot Data!: ", data, '\n............');
+    console.log("\n............\nGot Data!: ", data, '\n............\n');
     try {
-      
       let parsed = data.split('\n')
       for(let i of parsed){
         if(i !== ''){
-          JSON.parse(i);
+          let incomingData = JSON.parse(i);
+          if(incomingData.type === 'heartbeat' && hb && !incomingData.msg){
+            if (incomingData.epoch == hb.epoch+1 || incomingData.epoch == hb.epoch){
+              hb = incomingData
+            }else{
+              console.log('Data didnt get received in 2 seconds')
+              cleint.end()
+            }
+          }else{
+            if(!incomingData.msg)
+              hb = incomingData
+          }
         }
       }
     } catch (err) {
       console.log("JSON object not formatted properly");
       client.end()
-    }  
-
-
+    }
   });
 
   client.on("end", function() {
@@ -57,12 +98,12 @@ let getConn = connName => {
   });
 
   client.on("timeout", function() {
-    console.log("Client connection timeout.");
+    console.log("Connection timeout.");
     client.end()
   });
 
   client.on("error", function(err) {
-    console.error(JSON.stringify(err));
+    console.error('An error has occurred: ', JSON.stringify(err));
     client.end()
   });
 
@@ -79,37 +120,15 @@ const relogin = () => {
   })
 }
 
-const additionalParam = () => {
-  return new Promise((resolve, reject) => {
-    rl.question('enter commands as you get data', (input) => {
-      input = input.toLowerCase()
-      switch( input !== ''){
-        case input === 'time':
-          resolve( {'request': 'time'})
-        case input === 'count':
-          resolve( {'request': 'count'})
-        default:
-          reject(null)
-      }
-    })
-  })
-}
-
 const login = (name) => {
-  if(name.length > 12){
-    console.log('Usernames cannot be longer than 12 characters')
-    relogin();
-    return
-  }
   var nodeClient = getConn("Node");
   nodeClient.write(JSON.stringify({ name }));
-
-  new Promise((resolve, reject) => {
-    additionalParam().then(data => {resolve(data)})
-  }).then(data => {
-    nodeClient.write(JSON.stringify(data))
-  })
-
 };
 
-module.exports = { login };
+rl.question('Login: ', (name) => {
+  if(name.length > 12){
+    console.log('Usernames cannot be longer than 12 characters')
+    relogin()
+  }
+  login(name)
+})
