@@ -11,4 +11,6 @@ program
   .action((user) => {
     login(user)
   })
-  program.parse(process.argv);
+
+
+program.parse(process.argv);
