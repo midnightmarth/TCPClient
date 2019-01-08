@@ -35,34 +35,31 @@ let getConn = connName => {
 
   client.setEncoding("utf8");
 
-  // let something = () => {
-  //   if(connected) {
-  //     rl.question('\nenter commands as you get data\n', (input) => {
-  //       input = input.toLowerCase()
-  //       switch( input !== '' ){
-  //         case input === 'time':
-  //           client.write( JSON.stringify({'request': 'time'}) )
-  //           console.log('Asking for Server Time')
-  //           something()
-  //           break;
-  //         case input === 'count':
-  //           client.write(JSON.stringify({'request': 'count'}) )
-  //           console.log('Asking for Count')
-  //           something()
-  //           break;
-  //         default:
-  //           something()
-  //           return
-  //       }
-  //     })
-  //   }
-  // }
-
   client.on("connect", () => {
 
     console.log("Got Connection!");
     connected = true;
-    // something()
+    rl.setPrompt('Enter a command')
+    rl.prompt()
+    rl.on('line', (input) => {
+      input = input.toLowerCase()
+      switch( input !== '' ){
+        case input === 'time':
+          client.write( JSON.stringify({'request': 'time'}) )
+          console.log('Asking for Server Time')
+          break;
+        case input === 'count':
+          client.write(JSON.stringify({'request': 'count'}) )
+          console.log('Asking for Count')
+          break;
+        case input === 'exit':
+          client.end()
+          break;
+        default:
+          return
+      }
+    })
+    rl.prompt()
   });
 
   let hb = null;
@@ -125,10 +122,4 @@ const login = (name) => {
   nodeClient.write(JSON.stringify({ name }));
 };
 
-rl.question('Login: ', (name) => {
-  if(name.length > 12){
-    console.log('Usernames cannot be longer than 12 characters')
-    relogin()
-  }
-  login(name)
-})
+relogin()
