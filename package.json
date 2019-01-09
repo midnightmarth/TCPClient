@@ -10,8 +10,5 @@
   "author": "Stephen Myers",
   "license": "ISC",
   "dependencies": {
-    "commander": "^2.19.0",
-    "jsonlines": "^0.1.1",
-    "optimist": "^0.6.1"
   }
 }
